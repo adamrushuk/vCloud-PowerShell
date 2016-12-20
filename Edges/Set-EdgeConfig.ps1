@@ -79,3 +79,18 @@ $Response = Invoke-RestMethod -URI $Uri -Method POST -Headers $Headers -Body $Bo
 # Show task object information
 $Response | fc
 
+Write-Host -ForegroundColor yellow "Updating Edge Gateway $Name" -NoNewline
+$Response = Invoke-RestMethod -URI $Uri -Method POST -Headers $Headers -Body $Body 
+
+# Get Task progress
+$TaskHref = $Response.Task.href 
+Do {
+    $Task = Invoke-RestMethod -URI $TaskHref -Method GET -Headers $Headers
+    Write-Host -ForegroundColor yellow "." -NoNewline
+    Start-Sleep 2
+} While ($Task.Task.status -eq "running")
+
+Write-Host -ForegroundColor yellow "."
+Write-Host -ForegroundColor green "Edge update complete"
+
+
