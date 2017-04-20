@@ -1,89 +1,84 @@
 <#
-.SYNOPSIS
-Uploads vCloud Edge XML configuration to vCloud
-	
-.DESCRIPTION
-Uploads vCloud Edge VPN and/or Static Routes XML configuration to vCloud via the API
+    .SYNOPSIS
+    Uploads vCloud Edge XML configuration to vCloud
 
-.EXAMPLE
-PS C:\> Connect-CIServer api.vcd.portal.skyscapecloud.com
-PS C:\> .\Set-EdgeConfig.ps1 -Name "nft000xxi2-1" -Path "C:\Users\username\Desktop\EdgeXML\nft000xxi2-1\nft000xxi2-1_VPN.xml"
-	
-.EXAMPLE
-PS C:\> Connect-CIServer vcloud
-PS C:\> .\Set-EdgeConfig.ps1 -Name "nft001a4i2 -1" -Path "C:\Users\suarush\Desktop\EdgeXML\nft001a4i2 -1\nft001a4i2 -1_VPN.xml"
+    .DESCRIPTION
+    Uploads vCloud Edge VPN and/or Static Routes XML configuration to vCloud via the API
 
-.NOTES
-Author: Adam Rush
-Created: 2016-11-25
+    .EXAMPLE
+     Connect-CIServer api.vcd.portal.skyscapecloud.com
+     .\Set-EdgeConfig.ps1 -Name "nft000xxi2-1" -Path "C:\Users\username\Desktop\EdgeXML\nft000xxi2-1\nft000xxi2-1_VPN.xml"
+
+    .EXAMPLE
+     Connect-CIServer api.vcd.portal.skyscapecloud.com
+     .\Set-EdgeConfig.ps1 -Name "nft00001i2" -Path "C:\Users\suarush\Desktop\EdgeXML\nft00001i2\nft00001i2_VPN.xml"
+
+    .NOTES
+    Author: Adam Rush
+    Created: 2016-11-25
 #>
-	
 Param (
 
-[parameter(Mandatory=$true)]
-[ValidateNotNullOrEmpty()]
-[String]$Name,
+    [parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
+    [String]$Name,
 
-[parameter(Mandatory=$true)]
-[ValidateNotNullOrEmpty()]
-[String]$Path
-)    	
+    [parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
+    [String]$Path
+
+)
 
 # Test XML path exists
-if(!(Test-Path -Path $Path)){
-    Write-Warning "$Path not found"
-    Exit
+if (!(Test-Path -Path $Path)) {
+    throw "$Path not found"
 }
 
 if (-not $global:DefaultCIServers) {
-    Write-Warning "Please connect to vcloud before using this function, eg. Connect-CIServer vcloud"
-    Exit
+    throw "Please connect to vcloud before using this function, eg. Connect-CIServer vcloud"
 }
 
-#Search EdgeGW
+# Search EdgeGW
 try {
-  $EdgeView = Search-Cloud -QueryType EdgeGateway -Name $Name | Get-CIView
+    $EdgeView = Search-Cloud -QueryType EdgeGateway -Name $Name | Get-CIView
 } catch {
-      Write-Warning "Edge Gateway with name $EdgeView not found"
-      Exit
+    throw "Edge Gateway with name $EdgeView not found"
 }
 
 # Test for null object
 if ($EdgeView -eq $null) {
-      Write-Warning "Edge Gateway result is NULL, exiting..."
-      Exit    
+    throw "Edge Gateway result is NULL, exiting..."
 }
 
 # Test for 1 returned object
 if ($EdgeView.Count -gt 1) {
-      Write-Warning "More than 1 Edge Gateway found, exiting..."
-      Exit    
+    throw "More than 1 Edge Gateway found, exiting..."
 }
 
 # Load XML
-[XML]$Body = Get-Content -Path $Path
+[xml]$Body = Get-Content -Path $Path
 
-# Upload new VPN XML Edge config 
+# Upload new VPN XML Edge config
 $Uri = ($EdgeView.Href + "/action/configureServices")
 
 # Set headers
 $Headers = @{
-    "x-vcloud-authorization"=$EdgeView.Client.SessionKey
-    "Accept"="application/*+xml;version=5.1"
-    "Content-Type"="application/vnd.vmware.admin.edgeGatewayServiceConfiguration+xml"
+    "x-vcloud-authorization" = $EdgeView.Client.SessionKey
+    "Accept" = "application/*+xml;version=5.1"
+    "Content-Type" = "application/vnd.vmware.admin.edgeGatewayServiceConfiguration+xml"
 }
 
 # Upload XML
-$Response = Invoke-RestMethod -URI $Uri -Method POST -Headers $Headers -Body $Body 
+$Response = Invoke-RestMethod -URI $Uri -Method POST -Headers $Headers -Body $Body
 
 # Show task object information
-$Response | fc
+$Response | Format-Custom
 
 Write-Host -ForegroundColor yellow "Updating Edge Gateway $Name" -NoNewline
-$Response = Invoke-RestMethod -URI $Uri -Method POST -Headers $Headers -Body $Body 
+$Response = Invoke-RestMethod -URI $Uri -Method POST -Headers $Headers -Body $Body
 
 # Get Task progress
-$TaskHref = $Response.Task.href 
+$TaskHref = $Response.Task.href
 Do {
     $Task = Invoke-RestMethod -URI $TaskHref -Method GET -Headers $Headers
     Write-Host -ForegroundColor yellow "." -NoNewline
@@ -92,5 +87,3 @@ Do {
 
 Write-Host -ForegroundColor yellow "."
 Write-Host -ForegroundColor green "Edge update complete"
-
-
