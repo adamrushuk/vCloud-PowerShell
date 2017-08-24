@@ -1,2 +1,2 @@
 # vCloud-PowerShell
-Various useful vCloud scripts I've used over the years.
+Various VMware vCloud PowerCLI scripts I've created or used over the years.

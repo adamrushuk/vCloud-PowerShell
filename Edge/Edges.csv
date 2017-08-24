@@ -1,0 +1,4 @@
+Id,Name,Type,Version,Status,Interfaces,Size,Tenant
+edge-1,vse-01(abc12345-672b-485f-bb46-7a7667a6724d),gatewayServices,5.5.4,Deployed,2,Compact,abc12345-1234-abcd-1234-12345678abcd
+edge-2,vse-02 (abc12345-24d6-4d88-90fe-a0802d107e0f),gatewayServices,5.5.4,Deployed,2,Compact,abc12345-1234-abcd-1234-12345678abcd
+edge-3,vse-03 (abc12345-f81d-4750-87e6-d3474367342c),gatewayServices,5.5.4,Deployed,2,Compact,abc12345-f81d-4750-87e6-d3474367342c
